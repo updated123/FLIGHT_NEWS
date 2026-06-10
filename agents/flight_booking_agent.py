@@ -20,6 +20,8 @@ from dotenv import load_dotenv
 from groq import Groq
 from langgraph.graph import END, START, StateGraph
 
+from agents.groq_utils import groq_chat_with_retry
+
 # Reuse existing news fetcher
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fetch_aviation_news import fetch_posts  # noqa: E402
@@ -89,7 +91,8 @@ Categories: {", ".join(article.get("categories", []))}
 Tags: {", ".join(article.get("tags", [])[:8])}
 """
 
-    response = client.chat.completions.create(
+    response = groq_chat_with_retry(
+        client,
         model=DEFAULT_MODEL,
         messages=[
             {
@@ -99,7 +102,7 @@ Tags: {", ".join(article.get("tags", [])[:8])}
             {"role": "user", "content": prompt},
         ],
         temperature=0.2,
-        max_tokens=2500,
+        max_tokens=800,
         response_format={"type": "json_object"},
     )
     content = response.choices[0].message.content or "{}"
