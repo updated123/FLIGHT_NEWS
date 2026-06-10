@@ -152,6 +152,56 @@ def fetch_posts(
     return articles
 
 
+def fetch_all_posts(
+    *,
+    category: str | None = None,
+    include_content: bool = False,
+    delay_seconds: float = 0.05,
+    on_date: date | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch every article for the given date (paginates until exhausted)."""
+    articles: list[dict[str, Any]] = []
+    page = 1
+
+    while True:
+        params: dict[str, Any] = {
+            "per_page": MAX_PER_PAGE,
+            "page": page,
+            "_embed": 1,
+        }
+        if category:
+            params["categories"] = category
+        if on_date:
+            start = datetime.combine(on_date, datetime.min.time(), tzinfo=SITE_TZ)
+            end = start + timedelta(days=1)
+            params["after"] = start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            params["before"] = end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        url = f"{API_POSTS}?{urlencode(params)}"
+        try:
+            payload, headers = http_get(url)
+        except HTTPError as exc:
+            if exc.code == 400 and page > 1:
+                break
+            raise
+
+        posts = json.loads(payload.decode("utf-8"))
+        if not posts:
+            break
+
+        for post in posts:
+            articles.append(normalize_post(post, include_content))
+
+        total_pages = int(headers.get("x-wp-totalpages", "1"))
+        if page >= total_pages:
+            break
+        page += 1
+        if delay_seconds:
+            time.sleep(delay_seconds)
+
+    return articles
+
+
 def fetch_categories() -> list[dict[str, Any]]:
     url = f"{BASE_URL}/wp-json/wp/v2/categories?per_page=100"
     payload, _ = http_get(url)
