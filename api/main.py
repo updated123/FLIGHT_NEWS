@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -34,14 +33,12 @@ app.add_middleware(
 
 
 class TicketBookingRequest(BaseModel):
-    airline: str = Field(..., example="Delta")
-    origin: str = Field(..., min_length=3, max_length=3, example="JFK")
-    destination: str = Field(..., min_length=3, max_length=3, example="LAX")
-    departure_date: str = Field(..., example="2026-07-15", description="YYYY-MM-DD")
-    base_fare: float = Field(..., gt=0, example=420.0)
-    flight_number: Optional[str] = Field(None, example="DL123")
-    cabin_class: str = Field("Economy", example="Economy")
-    currency: str = Field("USD", example="USD")
+    airline: str = Field(..., example="Emirates", description="Flight company")
+    origin: str = Field(..., min_length=3, max_length=3, example="DXB", description="Source airport")
+    destination: str = Field(
+        ..., min_length=3, max_length=3, example="FRA", description="Destination airport"
+    )
+    departure_date: str = Field(..., example="2026-07-20", description="YYYY-MM-DD")
 
 
 @app.get("/health")
@@ -52,14 +49,10 @@ def health() -> dict[str, str]:
 @app.post("/api/analyze-booking")
 def analyze_booking(request: TicketBookingRequest) -> dict:
     """
-    Run complete flow for a ticket booking:
-    1. Fetch today's aviation news
-    2. Process each article for price impact
-    3. Return final suggestion for this specific booking
+    Fetch today's news, analyze in batches of 3, return only significant impacts.
     """
     try:
-        booking = request.model_dump()
-        return analyze_booking_with_news(booking)
+        return analyze_booking_with_news(request.model_dump())
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:

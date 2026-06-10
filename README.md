@@ -51,24 +51,29 @@ uvicorn api.main:app --reload --port 8000
 curl -X POST http://localhost:8000/api/analyze-booking \
   -H "Content-Type: application/json" \
   -d '{
-    "airline": "Delta",
-    "flight_number": "DL123",
-    "origin": "JFK",
-    "destination": "LAX",
-    "departure_date": "2026-07-15",
-    "cabin_class": "Economy",
-    "base_fare": 420,
-    "currency": "USD"
+    "airline": "Emirates",
+    "origin": "DXB",
+    "destination": "FRA",
+    "departure_date": "2026-07-20"
   }'
 ```
 
-Fetches **all** of today's news automatically (no limit), processes each article, then returns a final suggestion for your booking.
+Fetches **all** of today's news, processes in batches of 3, returns only **significant impacts** for your booking.
 
-Response includes:
-- `final_suggestion` — personalized advice for your booking
-- `pricing` — current vs suggested fare outlook
-- `article_analyses` — per-news impact breakdown
-- `summary` — counts and headlines
+Example response:
+```json
+{
+  "final_suggestion": "Book DXB-FRA soon; reduced Emirates A380 capacity may push fares up.",
+  "Emirates Will No Longer Fly A380 to Germany": "Reduced capacity on Germany routes may increase Emirates fares on DXB-FRA."
+}
+```
+
+If no significant impact:
+```json
+{
+  "final_suggestion": "No significant price impact from today's news for this booking."
+}
+```
 
 ## LangGraph CLI flow
 
@@ -115,12 +120,10 @@ Click **Create Web Service** → Render builds and deploys automatically.
 curl -X POST https://YOUR-APP.onrender.com/api/analyze-booking \
   -H "Content-Type: application/json" \
   -d '{
-    "airline": "Delta",
-    "origin": "JFK",
-    "destination": "LAX",
-    "departure_date": "2026-07-15",
-    "base_fare": 420,
-    "currency": "USD"
+    "airline": "Emirates",
+    "origin": "DXB",
+    "destination": "FRA",
+    "departure_date": "2026-07-20"
   }'
 ```
 
