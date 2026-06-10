@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 import time
 from typing import Any, Optional
@@ -10,14 +9,14 @@ from typing import Any, Optional
 from groq import Groq
 
 DEFAULT_MAX_RETRIES = 5
-DEFAULT_DELAY_BETWEEN_CALLS = float(os.getenv("GROQ_REQUEST_DELAY_SECONDS", "7"))
+DEFAULT_RETRY_WAIT = 5.0
 
 
 def parse_retry_seconds(error_message: str) -> float:
     match = re.search(r"try again in ([\d.]+)s", error_message, re.IGNORECASE)
     if match:
         return float(match.group(1)) + 1.0
-    return DEFAULT_DELAY_BETWEEN_CALLS
+    return DEFAULT_RETRY_WAIT
 
 
 def groq_chat_with_retry(
@@ -43,7 +42,3 @@ def groq_chat_with_retry(
     if last_error:
         raise last_error
     raise RuntimeError("Groq request failed after retries")
-
-
-def throttle_between_calls() -> None:
-    time.sleep(DEFAULT_DELAY_BETWEEN_CALLS)

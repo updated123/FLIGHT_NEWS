@@ -13,7 +13,5 @@ services:
         sync: false
       - key: GROQ_MODEL
         value: qwen/qwen3-32b
-      - key: GROQ_REQUEST_DELAY_SECONDS
-        value: "7"
       - key: NEWS_BATCH_SIZE
         value: "3"

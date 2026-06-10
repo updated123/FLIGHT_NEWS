@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 from groq import Groq
 
-from agents.groq_utils import groq_chat_with_retry, throttle_between_calls
+from agents.groq_utils import groq_chat_with_retry
 from agents.flight_booking_agent import (
     DEFAULT_MODEL,
     SITE_TZ,
@@ -283,9 +283,6 @@ def analyze_booking_with_news(
     results: list[dict[str, Any]] = []
 
     for batch_number, batch in enumerate(batches, start=1):
-        if batch_number > 1:
-            throttle_between_calls()
-
         start_index = (batch_number - 1) * NEWS_BATCH_SIZE + 1
         end_index = start_index + len(batch) - 1
 
